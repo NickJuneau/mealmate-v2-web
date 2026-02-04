@@ -7,7 +7,7 @@ const Header = () => {
       role="banner"
       style={{ height: "var(--header-height, 4rem)" }}
     >
-      <div className="max-w-screen-xl flex items-center justify-between mx-auto p-4 h-full">
+      <div className="max-w-7xl flex items-center justify-between mx-auto p-4 h-full">
         <a href="/" className="flex items-center space-x-3">
           <img src="/test-logo.png" className="h-7" alt="MealMate Logo" />
           <span className="text-xl font-semibold whitespace-nowrap">
