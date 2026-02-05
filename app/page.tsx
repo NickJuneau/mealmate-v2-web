@@ -152,7 +152,7 @@ export default function HomePage() {
             )}
 
             {data && data.preview.length === 0 && (
-              <div className="text-gray-500 py-6">No swipe emails found for this week.</div>
+              <div className="text-gray-500 py-6">No meal swipes found this week.</div>
             )}
 
             {data && data.preview.length > 0 && (
