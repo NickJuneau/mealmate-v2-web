@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
 :root {
   --header-height: 4rem; /* change this once to affect header + page padding */
 }
