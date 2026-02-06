@@ -40,7 +40,8 @@ export default function HistoryPage() {
             <p className="text-sm text-gray-400">Recent swipe emails (last {days} days)</p>
           </div>
 
-          <div className="flex items-center gap-3">
+        {/* Optional inclusion of EXPORT CSV. As of now not implemented. */}
+          {/* <div className="flex items-center gap-3">
             <button
               onClick={() => csvRows.length > 1 && downloadCsv('mealmate-history.csv', csvRows)}
               disabled={!csvRows || csvRows.length <= 1}
@@ -48,7 +49,7 @@ export default function HistoryPage() {
             >
               Export CSV
             </button>
-          </div>
+          </div> */}
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

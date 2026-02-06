@@ -126,7 +126,7 @@ export default function HomePage() {
                 disabled={isRescanning}
                 className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm shadow-sm"
               >
-                {isRescanning ? 'Rescanning…' : 'Rescan'}
+              Rescan
               </button>
             </div>
           </div>
@@ -180,7 +180,7 @@ export default function HomePage() {
 
         {/* small footer hint */}
         <div className="text-xs text-gray-400 mt-6">
-          Tip: connect your Gmail to enable automatic scanning. (Local dev uses token.json)
+          Tip: connect your Gmail to enable automatic scanning. (In development)
         </div>
       </div>
     </main>
