@@ -1,12 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// prisma/schema.prisma
 generator client {
-  provider = "prisma-client-js"
-  output = "../node_modules/.prisma/client"
+  provider   = "prisma-client-js"
+  output     = "../node_modules/.prisma/client"
   engineType = "binary"
 }
 
@@ -14,15 +9,76 @@ datasource db {
   provider = "postgresql"
 }
 
+/**
+ * Unified schema: NextAuth models + your app models
+ */
+
 model User {
-  id         String       @id @default(uuid())
-  email      String       @unique
-  createdAt  DateTime     @default(now())
-  gmailToken GmailToken?
-  events     SwipeEvent[]
+  id            String    @id @default(uuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+
+  // NextAuth relations
+  accounts Account[] // one-to-many
+  sessions Session[] // one-to-many
+
+  // Your app relations
+  gmailToken GmailToken? // one-to-one
+  events     SwipeEvent[] // one-to-many
 
   @@map("users")
 }
+
+model Account {
+  id                        String   @id @default(uuid())
+  userId                    String
+  type                      String
+  provider                  String
+  providerAccountId         String
+  refresh_token             String?
+  access_token              String?
+  expires_at                Int?
+  refresh_token_expires_in  Int?        // ← add this (optional)
+  token_type                String?
+  scope                     String?
+  id_token                  String?
+  session_state             String?
+  createdAt                 DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+/**
+ * Your app-specific models
+ */
 
 model GmailToken {
   id           String    @id @default(uuid())
