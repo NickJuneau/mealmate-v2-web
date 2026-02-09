@@ -43,3 +43,5 @@ next-env.d.ts
 # dev files
 credentials.json
 token.json
+
+/app/generated/prisma

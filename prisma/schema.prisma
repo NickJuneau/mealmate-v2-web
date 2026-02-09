@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String       @id @default(uuid())
+  email      String       @unique
+  createdAt  DateTime     @default(now())
+  gmailToken GmailToken?
+  events     SwipeEvent[]
+
+  @@map("users")
+}
+
+model GmailToken {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  googleUserId String
+  accessToken  String?
+  refreshToken String?
+  scope        String?
+  tokenType    String?
+  expiry       DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("gmail_tokens")
+}
+
+model SwipeEvent {
+  id         String   @id @default(uuid())
+  userId     String
+  messageId  String
+  orderId    String?
+  occurredAt DateTime
+  meals      Int
+  store      String?
+  items      Json?
+  rawSnippet String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@map("swipe_events")
+}
