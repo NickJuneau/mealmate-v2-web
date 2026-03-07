@@ -68,8 +68,12 @@ export function useRescan() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (days: number = 7) => {
-      // force=1 triggers a fresh Gmail sync + DB upsert, then returns summary
-      const res = await fetch(`/api/swipes?days=${days}&force=1`);
+      // POST triggers a fresh Gmail sync + DB upsert, then returns summary
+      const res = await fetch('/api/swipes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days })
+      });
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(parseApiError(txt, 'Rescan failed'));

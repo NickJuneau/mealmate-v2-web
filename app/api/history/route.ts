@@ -5,8 +5,6 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/app/lib/db';
 import { getHistoryFromDb, maybeSyncSwipesForUser } from '@/app/lib/swipeStore';
 
-const FORCE_SYNC_MIN_INTERVAL_MS = 60 * 1000;
-
 function parseDays(value: string | null, fallback: number) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
@@ -39,9 +37,6 @@ export async function GET(req: Request) {
 
     const url = new URL(req.url);
     const days = parseDays(url.searchParams.get('days'), 30);
-    const force =
-      url.searchParams.get('force') === '1' ||
-      url.searchParams.get('force') === 'true';
     const debug =
       url.searchParams.get('debug') === '1' ||
       url.searchParams.get('debug') === 'true';
@@ -54,30 +49,13 @@ export async function GET(req: Request) {
       expiry_date: gmailRecord.expiry ? gmailRecord.expiry.getTime() : undefined
     };
 
-    if (force) {
-      const ageMs = Date.now() - gmailRecord.updatedAt.getTime();
-      if (ageMs < FORCE_SYNC_MIN_INTERVAL_MS) {
-        const retryAfterSec = Math.ceil((FORCE_SYNC_MIN_INTERVAL_MS - ageMs) / 1000);
-        return NextResponse.json(
-          {
-            error: `Please wait ${retryAfterSec}s before rescanning again.`,
-            retryAfterSec
-          },
-          {
-            status: 429,
-            headers: { 'Retry-After': String(retryAfterSec) }
-          }
-        );
-      }
-    }
-
     const sync = await maybeSyncSwipesForUser({
       userId: user.id,
       token,
       gmailTokenUpdatedAt: gmailRecord.updatedAt,
       days,
       debug,
-      force
+      force: false
     });
 
     const history = await getHistoryFromDb({

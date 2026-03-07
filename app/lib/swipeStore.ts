@@ -4,23 +4,9 @@ import {
   type GmailOAuthToken,
   type SwipeEvent as ParsedSwipeEvent
 } from '@/app/lib/grubhub';
+import { getSwipeWeekWindow } from '@/app/lib/time';
 
 const SYNC_COOLDOWN_MS = 30 * 60 * 1000; // avoid repeated scans for empty-result users
-
-function swipeWeekStart(date = new Date()) {
-  const d = new Date(date.getTime());
-  const day = d.getDay(); // 0=Sun ... 4=Thu
-  const daysBack = (day - 4 + 7) % 7;
-  const start = new Date(d.getTime());
-  start.setDate(d.getDate() - daysBack);
-  start.setHours(0, 0, 0, 0);
-  start.setMilliseconds(0);
-  return start;
-}
-
-function weekEndFromStartMs(startMs: number) {
-  return startMs + 7 * 24 * 60 * 60 * 1000;
-}
 
 function isSyncStale(lastSyncAt: Date) {
   return Date.now() - lastSyncAt.getTime() >= SYNC_COOLDOWN_MS;
@@ -33,7 +19,6 @@ function toClientEvent(e: {
   meals: number;
   store: string | null;
   items: unknown;
-  rawSnippet: string | null;
 }) {
   return {
     messageId: e.messageId,
@@ -41,8 +26,7 @@ function toClientEvent(e: {
     occurredAt: e.occurredAt.toISOString(),
     meals: e.meals,
     store: e.store,
-    items: Array.isArray(e.items) ? e.items.map(String) : undefined,
-    rawSnippet: e.rawSnippet ?? undefined
+    items: Array.isArray(e.items) ? e.items.map(String) : undefined
   };
 }
 
@@ -157,8 +141,7 @@ export async function getSwipesSummaryFromDb({
   previewLimit?: number;
   lastSyncedAt?: Date;
 }) {
-  const weekStart = swipeWeekStart();
-  const weekEnd = new Date(weekEndFromStartMs(weekStart.getTime()));
+  const { weekStart, weekEnd } = getSwipeWeekWindow();
   const recentCutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   const [weeklyAgg, previewRows, recentAgg, recentCount] = await prisma.$transaction([
@@ -182,8 +165,7 @@ export async function getSwipesSummaryFromDb({
         occurredAt: true,
         meals: true,
         store: true,
-        items: true,
-        rawSnippet: true
+        items: true
       }
     }),
     prisma.swipeEvent.aggregate({
@@ -238,8 +220,7 @@ export async function getHistoryFromDb({
         occurredAt: true,
         meals: true,
         store: true,
-        items: true,
-        rawSnippet: true
+        items: true
       }
     }),
     prisma.swipeEvent.aggregate({
@@ -252,7 +233,7 @@ export async function getHistoryFromDb({
   ]);
 
   return {
-    weekStart: swipeWeekStart().toISOString(),
+    weekStart: getSwipeWeekWindow().weekStart.toISOString(),
     usedRecent: agg._sum.meals ?? 0,
     lastSyncedAt: lastSyncedAt ? lastSyncedAt.toISOString() : null,
     events: events.map(toClientEvent)

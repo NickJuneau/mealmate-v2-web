@@ -7,6 +7,7 @@
 // NOTE: CREATED BY chatgpt.com
 
 import { google } from 'googleapis';
+import { getSwipeWeekWindow } from '@/app/lib/time';
 
 export type SwipeEvent = {
   messageId: string;
@@ -71,20 +72,6 @@ async function makeGmailClient(
   }
 
   return google.gmail({ version: 'v1', auth: oAuth2Client });
-}
-
-function swipeWeekStart(date = new Date()) {
-  const d = new Date(date.getTime());
-  const day = d.getDay(); // 0=Sun ... 4=Thu
-  const daysBack = ((day - 4 + 7) % 7);
-  const start = new Date(d.getTime());
-  start.setDate(d.getDate() - daysBack);
-  start.setHours(0, 0, 0, 0);
-  start.setMilliseconds(0);
-  return start;
-}
-function weekEndFromStartMs(startMs: number) {
-  return startMs + 7 * 24 * 60 * 60 * 1000;
 }
 
 // Gmail decoding helper
@@ -250,9 +237,9 @@ export async function scanGmailForSwipes({
   }
 
   const now = Date.now();
-  const weekStart = swipeWeekStart(new Date());
+  const { weekStart, weekEnd } = getSwipeWeekWindow(new Date());
   const weekStartMs = weekStart.getTime();
-  const weekEndMs = weekEndFromStartMs(weekStartMs);
+  const weekEndMs = weekEnd.getTime();
 
   // build query: match known senders and keywords, limit to recent days
   const senderParts = '(from:(grubhub OR tapingo-grubhub OR "no-reply@tapingo" OR "no-reply@grubhub") OR subject:(\"Order approved\" OR \"Order Receipt\" OR \"Order confirmed\") OR "Meals Used" OR "Paid Using")';
