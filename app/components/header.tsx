@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
+import Image from "next/image";
 
 const Header = () => {
   const { status } = useSession();
@@ -14,11 +15,13 @@ const Header = () => {
     >
       <div className="max-w-7xl flex items-center justify-between mx-auto p-4 h-full">
         <Link href="/" className="flex items-center space-x-3">
-          <img src="/test-logo.png" className="h-7" alt="MealMate Logo" />
-          <span className="text-xl font-semibold whitespace-nowrap">
+          <Image src="/mealmate-main-logo.svg" alt="MealMate Logo" width={150} height={120}/>
+          
+          {/* <img src="/test-logo.png" className="h-7" alt="MealMate Logo" /> */}          
+          {/* <span className="text-xl font-semibold whitespace-nowrap">
             MealMate
             <span className="ml-1 text-xs align-baseline">v2</span>
-          </span>
+          </span> */}
         </Link>
 
         <div className="flex items-center space-x-6">
