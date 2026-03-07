@@ -38,6 +38,32 @@ export type GmailOAuthToken = {
   expiry_date?: number;
 };
 
+type GmailHeader = { name?: string | null; value?: string | null };
+type MessagePart = {
+  parts?: MessagePart[];
+  body?: { data?: string | null };
+  headers?: GmailHeader[];
+};
+type MessageLike = {
+  payload?: MessagePart;
+  raw?: string | null;
+  snippet?: string | null;
+};
+
+function getErrorMessage(err: unknown) {
+  if (err instanceof Error && err.message) return err.message;
+  return String(err);
+}
+
+function getErrorResponseData(err: unknown) {
+  if (typeof err !== 'object' || err === null) return null;
+  const response = (err as { response?: unknown }).response;
+  if (typeof response !== 'object' || response === null) return null;
+  const data = (response as { data?: unknown }).data;
+  if (typeof data !== 'object' || data === null) return null;
+  return data as Record<string, unknown>;
+}
+
 // build a Gmail client, refreshing the access token if necessary.
 // Requires an OAuth token object from persisted user credentials.
 async function makeGmailClient(
@@ -63,9 +89,9 @@ async function makeGmailClient(
   try {
     if (debug) console.log('[grubhub] checking access token');
     await oAuth2Client.getAccessToken();
-  } catch (err: any) {
-    const errBody = err?.response?.data || err;
-    if (errBody && errBody.error === 'invalid_grant') {
+  } catch (err: unknown) {
+    const errBody = getErrorResponseData(err);
+    if (errBody?.error === 'invalid_grant') {
       throw new Error('invalid_grant');
     }
     throw err;
@@ -82,17 +108,17 @@ function decodeBase64UrlSafe(b64?: string) {
   return Buffer.from(b64, 'base64').toString('utf8');
 }
 
-function extractHeader(headers: any[] | undefined, name: string) {
+function extractHeader(headers: GmailHeader[] | undefined, name: string) {
   if (!headers) return null;
-  const h = headers.find(h => h.name && h.name.toLowerCase() === name.toLowerCase());
+  const h = headers.find((x) => x.name && x.name.toLowerCase() === name.toLowerCase());
   return h ? h.value : null;
 }
 
 /* ---------- Parser: attempts to extract meals, order, store, items ---------- */
-export function parseMessageForOrderAndMeals(msg: any) {
+export function parseMessageForOrderAndMeals(msg: MessageLike) {
   let body = '';
 
-  function gatherParts(part: any) {
+  function gatherParts(part: MessagePart | undefined) {
     if (!part) return;
     if (Array.isArray(part.parts) && part.parts.length) {
       for (const p of part.parts) gatherParts(p);
@@ -226,9 +252,9 @@ export async function scanGmailForSwipes({
   let gmail;
   try {
     gmail = await makeGmailClient({ debug, token });
-  } catch (err: any) {
+  } catch (err: unknown) {
     // propagate more specific errors so callers can react (e.g. signal 401)
-    if (err.message === 'invalid_grant') {
+    if (getErrorMessage(err) === 'invalid_grant') {
       const e = new Error('invalid_grant');
       // keep original stack for debugging
       throw e;
@@ -273,11 +299,11 @@ export async function scanGmailForSwipes({
       // enforce days window
       if (internalDateMs < now - days * 24 * 3600 * 1000) continue;
 
-      const headers = msg.payload?.headers || [];
+      const headers = msg.payload?.headers as GmailHeader[] | undefined;
       const subject = extractHeader(headers, 'Subject') || '';
       const from = extractHeader(headers, 'From') || '';
 
-      const parsed = parseMessageForOrderAndMeals(msg);
+      const parsed = parseMessageForOrderAndMeals(msg as MessageLike);
       const meals = parsed.meals ?? 0;
       const orderId = parsed.orderId ?? null;
       const orderKey = orderId ?? msgId;
@@ -322,8 +348,8 @@ export async function scanGmailForSwipes({
           console.log('--------------------------------');
         }
       }
-    } catch (err: any) {
-      if (debug) console.error('[grubhub] msg fetch error', msgId, err?.message ?? err);
+    } catch (err: unknown) {
+      if (debug) console.error('[grubhub] msg fetch error', msgId, getErrorMessage(err));
       continue;
     }
   }

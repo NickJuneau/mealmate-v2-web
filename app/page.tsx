@@ -1,14 +1,19 @@
 // app/page.tsx (client)
 'use client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSwipes, useRescan } from '@/app/lib/hooks/useSwipes';
 import { signIn, useSession } from 'next-auth/react';
-import Image from "next/image"
+import Image from 'next/image';
 
 type ScanMessage = { type: 'info' | 'success' | 'error'; text: string } | null;
 
+function getErrorMessage(err: unknown, fallback: string) {
+  if (err instanceof Error && err.message) return err.message;
+  return fallback;
+}
+
 export default function HomePage() {
-  const [days] = useState<number>(7); // fixed to 7 days per your design
+  const [days] = useState<number>(7);
   const { status } = useSession();
   const isAuthed = status === 'authenticated';
   const { data, isLoading, error } = useSwipes(days, isAuthed);
@@ -17,39 +22,15 @@ export default function HomePage() {
     ? new Date(data.meta.lastSyncedAt).toLocaleString()
     : 'Not synced yet';
 
-  // React Query v5 mutation status is 'pending' | 'success' | 'error' | 'idle'
   const isRescanning = rescan.status === 'pending';
-
-  // transient status message state
-  const [scanMessage, setScanMessage] = useState<ScanMessage>(null);
-
-  useEffect(() => {
-    // show "Rescanning…" while mutation is pending
-    if (rescan.status === 'pending') {
-      setScanMessage({ type: 'info', text: 'Rescanning…' });
-      return; // don't set timeout for pending; wait for result
-    }
-
-    // on success or error, show message and auto-clear after 5s
-    if (rescan.status === 'success') {
-      setScanMessage({ type: 'success', text: 'Rescan complete' });
-      const t = setTimeout(() => setScanMessage(null), 5000);
-      return () => clearTimeout(t);
-    }
-
-    if (rescan.status === 'error') {
-      setScanMessage({
-        type: 'error',
-        text: (rescan.error as Error)?.message ?? 'Rescan failed'
-      });
-      const t = setTimeout(() => setScanMessage(null), 5000);
-      return () => clearTimeout(t);
-    }
-
-    // if status is idle, we don't show anything (or we keep whatever message is present)
-    // no-op for 'idle'
-    return;
-  }, [rescan.status, rescan.error]);
+  const scanMessage: ScanMessage =
+    rescan.status === 'pending'
+      ? { type: 'info', text: 'Rescanning...' }
+      : rescan.status === 'success'
+      ? { type: 'success', text: 'Rescan complete' }
+      : rescan.status === 'error'
+      ? { type: 'error', text: getErrorMessage(rescan.error, 'Rescan failed') }
+      : null;
 
   if (status === 'loading') {
     return (
@@ -87,53 +68,38 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-        {/* subtle top area / hero card */}
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-4">
-            {/* <div className="h-10 w-10 rounded-md bg-black text-white flex items-center justify-center font-semibold">
-              M
-            </div> */}
-            {/* <div className="h-10 w-10 rounded-md bg-black text-white flex items-center justify-center font-semibold">
-              
-            </div> */}
-            <Image src="/favicon-16.svg" alt='secondary logo' width={50} height={50} />
+            <Image src="/favicon-16.svg" alt="secondary logo" width={50} height={50} />
             <div>
               <div className="text-sm text-gray-600">MealMate</div>
               <div className="text-xs text-gray-400">Meal tracker</div>
             </div>
           </div>
-
-          {/* small nav already exists — keep minimal */}
         </div>
 
-        {/* centered card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8">
-          {/* top row: big counter + actions */}
           <div className="md:flex md:items-center md:justify-between gap-6">
             <div>
               <div className="text-sm text-gray-500">This week</div>
 
               <div className="mt-2 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
                 <div className="text-5xl sm:text-6xl font-extrabold leading-none">
-                  {data ? data.used : '—'}{' '}
-                  <span className="text-2xl font-medium text-gray-400">/ 7</span>
+                  {data ? data.used : '-'} <span className="text-2xl font-medium text-gray-400">/ 7</span>
                 </div>
 
-                {/* remaining pill */}
                 <div className="px-3 py-1 rounded-full bg-[#FDECEE] text-[#9C000D] text-sm font-medium sm:ml-2">
-                  Remaining: {data ? data.remaining : '—'}
+                  Remaining: {data ? data.remaining : '-'}
                 </div>
               </div>
 
-              {/* nice progress bar */}
               <div className="mt-4 w-72 max-w-full">
                 <div className="relative h-4 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className="absolute left-0 top-0 h-full rounded-full transition-all duration-400"
                     style={{
                       width: `${data ? Math.min(100, (data.used / 7) * 100) : 0}%`,
-                      background:
-                        'linear-gradient(90deg, #9C000D 0%, #C1121F 100%)'
+                      background: 'linear-gradient(90deg, #9C000D 0%, #C1121F 100%)'
                     }}
                   />
                 </div>
@@ -142,11 +108,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* action column */}
             <div className="mt-6 md:mt-0 flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-start">
-              
-
-              {/* transient status area */}
               <div className="text-sm min-h-[1.5rem]">
                 {scanMessage ? (
                   <div
@@ -161,34 +123,31 @@ export default function HomePage() {
                     {scanMessage.text}
                   </div>
                 ) : (
-                  <div className=""></div>
+                  <div />
                 )}
               </div>
-              
-              {/* Rescan Button */}
+
               <button
                 onClick={() => rescan.mutate(days)}
                 disabled={isRescanning}
                 className="inline-flex items-center justify-center gap-2 bg-[#9C000D] hover:bg-[#B30012] disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm shadow-sm"
               >
-              Rescan
+                Rescan
               </button>
             </div>
           </div>
 
-          {/* divider */}
           <div className="h-px bg-gray-100 my-6" />
 
-          {/* list / preview */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">This Week's Meals</h2>
+              <h2 className="text-lg font-semibold">This Week&apos;s Meals</h2>
               <div className="text-sm text-gray-400">Last 7 days</div>
             </div>
 
             {isLoading && (
               <div className="py-8 flex justify-center">
-                <div className="text-gray-400">Loading recent meals…</div>
+                <div className="text-gray-400">Loading recent meals...</div>
               </div>
             )}
 
@@ -202,16 +161,12 @@ export default function HomePage() {
 
             {data && data.preview.length > 0 && (
               <ul className="divide-y divide-gray-100">
-                {data.preview.map((p: any) => (
+                {data.preview.map((p) => (
                   <li key={p.messageId} className="py-3">
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
-                        <div className="text-sm text-gray-600">
-                          {new Date(p.occurredAt).toLocaleString()}
-                        </div>
-                        <div className="mt-1 text-sm font-medium text-gray-900">
-                          {p.store ?? 'Unknown store'}
-                        </div>
+                        <div className="text-sm text-gray-600">{new Date(p.occurredAt).toLocaleString()}</div>
+                        <div className="mt-1 text-sm font-medium text-gray-900">{p.store ?? 'Unknown store'}</div>
                       </div>
 
                       <div className="text-sm text-gray-700 font-medium">{p.meals}M</div>
@@ -222,12 +177,8 @@ export default function HomePage() {
             )}
           </div>
         </div>
-
-        {/* small footer hint */}
-        <div className="text-xs text-gray-400 mt-6">
-          {/* Tip: connect your Gmail to enable automatic scanning. (In development) */}
-        </div>
       </div>
     </main>
   );
 }
+

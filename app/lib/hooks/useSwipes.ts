@@ -3,11 +3,20 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
+export type SwipeEvent = {
+  messageId: string;
+  orderId?: string | null;
+  occurredAt: string;
+  meals: number;
+  store?: string | null;
+  items?: string[];
+};
+
 type SwipesResponse = {
   weekStart: string;
   used: number;
   remaining: number;
-  preview: any[];
+  preview: SwipeEvent[];
   meta?: { usedRecent?: number; totalFoundRecent?: number; lastSyncedAt?: string | null };
 };
 
@@ -15,7 +24,7 @@ type HistoryResponse = {
   weekStart: string;
   usedRecent: number;
   lastSyncedAt?: string | null;
-  events: any[];
+  events: SwipeEvent[];
 };
 
 function parseApiError(text: string, fallback: string) {
