@@ -37,7 +37,7 @@ export default function HistoryPage() {
   if (status === 'loading') {
     return (
       <main className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6 py-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-gray-500">
             Checking session...
           </div>
@@ -49,8 +49,8 @@ export default function HistoryPage() {
   if (!isAuthed) {
     return (
       <main className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6 py-10">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
             <h1 className="text-xl font-semibold text-gray-900">Sign In Required</h1>
             <p className="mt-2 text-sm text-gray-600">
               Sign in with Google to view your swipe history.
@@ -69,8 +69,8 @@ export default function HistoryPage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-10">
-        <div className="flex items-center justify-between mb-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
           <div>
             <h1 className="text-xl font-semibold">History</h1>
             <p className="text-sm text-gray-400">Recent swipe emails (last {days} days)</p>
@@ -88,7 +88,7 @@ export default function HistoryPage() {
           </div> */}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
           {isLoading && (
             <div className="py-8 flex justify-center text-gray-500">Loading history…</div>
           )}

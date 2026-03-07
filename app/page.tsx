@@ -50,7 +50,7 @@ export default function HomePage() {
   if (status === 'loading') {
     return (
       <main className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6 py-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-gray-500">
             Checking session...
           </div>
@@ -62,8 +62,8 @@ export default function HomePage() {
   if (!isAuthed) {
     return (
       <main className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-6 py-10">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
             <h1 className="text-xl font-semibold text-gray-900">Connect Gmail to Start</h1>
             <p className="mt-2 text-sm text-gray-600">
               Sign in with Google to read your meal swipe emails and populate this dashboard.
@@ -82,9 +82,9 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-6 py-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* subtle top area / hero card */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-4">
             <div className="h-10 w-10 rounded-md bg-black text-white flex items-center justify-center font-semibold">
               M
@@ -99,20 +99,20 @@ export default function HomePage() {
         </div>
 
         {/* centered card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8">
           {/* top row: big counter + actions */}
           <div className="md:flex md:items-center md:justify-between gap-6">
             <div>
               <div className="text-sm text-gray-500">This week</div>
 
-              <div className="mt-2 flex items-center gap-4">
+              <div className="mt-2 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
                 <div className="text-5xl sm:text-6xl font-extrabold leading-none">
                   {data ? data.used : '—'}{' '}
                   <span className="text-2xl font-medium text-gray-400">/ 7</span>
                 </div>
 
                 {/* remaining pill */}
-                <div className="ml-2 px-3 py-1 rounded-full bg-[#FDECEE] text-[#9C000D] text-sm font-medium">
+                <div className="px-3 py-1 rounded-full bg-[#FDECEE] text-[#9C000D] text-sm font-medium sm:ml-2">
                   Remaining: {data ? data.remaining : '—'}
                 </div>
               </div>
@@ -134,11 +134,11 @@ export default function HomePage() {
             </div>
 
             {/* action column */}
-            <div className="mt-6 md:mt-0 flex items-start gap-3">
+            <div className="mt-6 md:mt-0 flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-start">
               
 
               {/* transient status area */}
-              <div className="text-sm">
+              <div className="text-sm min-h-[1.5rem]">
                 {scanMessage ? (
                   <div
                     className={`mt-1 px-3 py-1 rounded-md text-sm transition-opacity duration-300 ${
@@ -160,7 +160,7 @@ export default function HomePage() {
               <button
                 onClick={() => rescan.mutate(days)}
                 disabled={isRescanning}
-                className="inline-flex items-center gap-2 bg-[#9C000D] hover:bg-[#B30012] disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm shadow-sm"
+                className="inline-flex items-center justify-center gap-2 bg-[#9C000D] hover:bg-[#B30012] disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm shadow-sm"
               >
               Rescan
               </button>
