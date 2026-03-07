@@ -151,7 +151,7 @@ export default function HistoryPage() {
         </div>
 
         <div className="text-xs text-gray-400 mt-4">
-          Tip: History shows parsed swipe emails. If an item looks incorrect, open the raw email for debugging.
+          Note: History shows parsed swipe emails.
         </div>
       </div>
     </main>

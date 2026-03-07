@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSwipes, useRescan } from '@/app/lib/hooks/useSwipes';
 import { signIn, useSession } from 'next-auth/react';
+import Image from "next/image"
 
 type ScanMessage = { type: 'info' | 'success' | 'error'; text: string } | null;
 
@@ -86,12 +87,16 @@ export default function HomePage() {
         {/* subtle top area / hero card */}
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-4">
-            <div className="h-10 w-10 rounded-md bg-black text-white flex items-center justify-center font-semibold">
+            {/* <div className="h-10 w-10 rounded-md bg-black text-white flex items-center justify-center font-semibold">
               M
-            </div>
+            </div> */}
+            {/* <div className="h-10 w-10 rounded-md bg-black text-white flex items-center justify-center font-semibold">
+              
+            </div> */}
+            <Image src="/favicon-16.svg" alt='secondary logo' width={50} height={50} />
             <div>
-              <div className="text-sm text-gray-600">MealMate v2</div>
-              <div className="text-xs text-gray-400">Swipe tracker</div>
+              <div className="text-sm text-gray-600">MealMate</div>
+              <div className="text-xs text-gray-400">Meal tracker</div>
             </div>
           </div>
 
@@ -216,7 +221,7 @@ export default function HomePage() {
 
         {/* small footer hint */}
         <div className="text-xs text-gray-400 mt-6">
-          Tip: connect your Gmail to enable automatic scanning. (In development)
+          {/* Tip: connect your Gmail to enable automatic scanning. (In development) */}
         </div>
       </div>
     </main>
