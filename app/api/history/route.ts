@@ -1,9 +1,17 @@
 // app/api/history/route.ts
 import { NextResponse } from 'next/server';
-import { scanGmailForSwipes } from '@/app/lib/grubhub';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/app/lib/db';
+import { getHistoryFromDb, maybeSyncSwipesForUser } from '@/app/lib/swipeStore';
+
+const FORCE_SYNC_MIN_INTERVAL_MS = 60 * 1000;
+
+function parseDays(value: string | null, fallback: number) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(1, Math.min(180, Math.floor(parsed)));
+}
 
 export async function GET(req: Request) {
   try {
@@ -30,7 +38,10 @@ export async function GET(req: Request) {
     }
 
     const url = new URL(req.url);
-    const days = Number(url.searchParams.get('days') ?? '30');
+    const days = parseDays(url.searchParams.get('days'), 30);
+    const force =
+      url.searchParams.get('force') === '1' ||
+      url.searchParams.get('force') === 'true';
     const debug =
       url.searchParams.get('debug') === '1' ||
       url.searchParams.get('debug') === 'true';
@@ -43,23 +54,41 @@ export async function GET(req: Request) {
       expiry_date: gmailRecord.expiry ? gmailRecord.expiry.getTime() : undefined
     };
 
-    // We want full recent events (ignoreWeek true here because history is recent)
-    const res = await scanGmailForSwipes({
+    if (force) {
+      const ageMs = Date.now() - gmailRecord.updatedAt.getTime();
+      if (ageMs < FORCE_SYNC_MIN_INTERVAL_MS) {
+        const retryAfterSec = Math.ceil((FORCE_SYNC_MIN_INTERVAL_MS - ageMs) / 1000);
+        return NextResponse.json(
+          {
+            error: `Please wait ${retryAfterSec}s before rescanning again.`,
+            retryAfterSec
+          },
+          {
+            status: 429,
+            headers: { 'Retry-After': String(retryAfterSec) }
+          }
+        );
+      }
+    }
+
+    const sync = await maybeSyncSwipesForUser({
+      userId: user.id,
+      token,
+      gmailTokenUpdatedAt: gmailRecord.updatedAt,
       days,
-      maxResults: 500,
-      ignoreWeek: true,
       debug,
-      token
+      force
     });
-    // Return all events (recent)
-    return NextResponse.json({
-      weekStart: res.weekStart,
-      usedRecent: res.usedRecent,
-      events: res.events // array of SwipeEvent objects
+
+    const history = await getHistoryFromDb({
+      userId: user.id,
+      days,
+      lastSyncedAt: sync.lastSyncedAt
     });
-  } catch (err: any) {
+    return NextResponse.json(history);
+  } catch (err: unknown) {
     console.error('api/history error', err);
-    const msg = err?.message ?? 'server error';
+    const msg = err instanceof Error ? err.message : 'server error';
     if (msg === 'invalid_grant') {
       return NextResponse.json(
         { error: 'Gmail credentials expired or revoked; please sign in again.' },

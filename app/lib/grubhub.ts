@@ -1,13 +1,11 @@
 // lib/grubhub.ts
 // Server-side module for Next.js (App Router).
-// Dev-mode: expects credentials.json + token.json in project root.
+// Uses GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET from environment.
 // Usage: import { scanGmailForSwipes } from '@/lib/grubhub';
 // then call `await scanGmailForSwipes({ days: 7, maxResults: 250, ignoreWeek: false, debug: false })`
 
 // NOTE: CREATED BY chatgpt.com
 
-import fs from 'fs/promises';
-import path from 'path';
 import { google } from 'googleapis';
 
 export type SwipeEvent = {
@@ -31,25 +29,31 @@ export type ScanResult = {
   totalFoundRecent: number; // number of matched messages in window (distinct)
 };
 
-const SCOPES = ['https://www.googleapis.com/auth/gmail.readonly'];
+export type GmailOAuthToken = {
+  access_token?: string;
+  refresh_token?: string;
+  scope?: string;
+  token_type?: string;
+  expiry_date?: number;
+};
 
 // build a Gmail client, refreshing the access token if necessary.
-// Optionally accepts a token object; if none is provided it will fall back to
-// loading `token.json` from the project root (dev mode only).
+// Requires an OAuth token object from persisted user credentials.
 async function makeGmailClient(
-  opts: { token?: any; debug?: boolean } = {}
+  opts: { token?: GmailOAuthToken; debug?: boolean } = {}
 ) {
   const { token: providedToken, debug = false } = opts;
-
-  const creds = await loadJsonFromRoot<any>('credentials.json');
-  const token = providedToken ?? (await loadJsonFromRoot<any>('token.json'));
-
-  const clientId = (creds.installed ?? creds.web)?.client_id;
-  const clientSecret = (creds.installed ?? creds.web)?.client_secret;
-  if (!clientId || !clientSecret) throw new Error('Invalid credentials.json');
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  if (!clientId || !clientSecret) {
+    throw new Error('Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET');
+  }
+  if (!providedToken?.refresh_token) {
+    throw new Error('Missing OAuth refresh token');
+  }
 
   const oAuth2Client = new google.auth.OAuth2(clientId, clientSecret);
-  oAuth2Client.setCredentials(token);
+  oAuth2Client.setCredentials(providedToken);
 
   // ensure the access token is current. `getAccessToken` will automatically
   // perform a refresh using the stored `refresh_token` if necessary. An
@@ -67,27 +71,6 @@ async function makeGmailClient(
   }
 
   return google.gmail({ version: 'v1', auth: oAuth2Client });
-}
-
-// Helper: read credentials/token from project root (DEV ONLY)
-async function loadJsonFromRoot<T = any>(name: string): Promise<T> {
-  const p = path.resolve(process.cwd(), name);
-  try {
-    const raw = await fs.readFile(p, 'utf8');
-    return JSON.parse(raw) as T;
-  } catch (err: any) {
-    throw new Error(`Failed to load ${name} from project root (${p}): ${err?.message ?? err}`);
-  }
-}
-
-// Helper: write token back to disk (DEV ONLY)
-async function saveJsonToRoot<T = any>(name: string, data: T): Promise<void> {
-  const p = path.resolve(process.cwd(), name);
-  try {
-    await fs.writeFile(p, JSON.stringify(data, null, 2), 'utf8');
-  } catch (err: any) {
-    throw new Error(`Failed to save ${name} to project root (${p}): ${err?.message ?? err}`);
-  }
 }
 
 function swipeWeekStart(date = new Date()) {
@@ -249,7 +232,7 @@ export async function scanGmailForSwipes({
   maxResults?: number;
   ignoreWeek?: boolean;
   debug?: boolean;
-  token?: any;
+  token?: GmailOAuthToken;
 } = {}): Promise<ScanResult> {
   // build/refresh gmail client; will throw 'invalid_grant' if the stored tokens
   // are no longer usable and the user must re‑authorize.

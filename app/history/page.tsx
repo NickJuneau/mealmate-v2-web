@@ -20,6 +20,9 @@ export default function HistoryPage() {
   const { status } = useSession();
   const isAuthed = status === 'authenticated';
   const { data, isLoading, error } = useHistory(days, isAuthed);
+  const lastSyncedLabel = data?.lastSyncedAt
+    ? new Date(data.lastSyncedAt).toLocaleString()
+    : 'Not synced yet';
 
   const csvRows = useMemo(() => {
     if (!data?.events) return [];
@@ -74,6 +77,7 @@ export default function HistoryPage() {
           <div>
             <h1 className="text-xl font-semibold">History</h1>
             <p className="text-sm text-gray-400">Recent swipe emails (last {days} days)</p>
+            <p className="text-xs text-gray-400 mt-1">Last synced: {lastSyncedLabel}</p>
           </div>
 
         {/* Optional inclusion of EXPORT CSV. As of now not implemented. */}

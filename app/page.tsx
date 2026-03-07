@@ -13,6 +13,9 @@ export default function HomePage() {
   const isAuthed = status === 'authenticated';
   const { data, isLoading, error } = useSwipes(days, isAuthed);
   const rescan = useRescan();
+  const lastSyncedLabel = data?.meta?.lastSyncedAt
+    ? new Date(data.meta.lastSyncedAt).toLocaleString()
+    : 'Not synced yet';
 
   // React Query v5 mutation status is 'pending' | 'success' | 'error' | 'idle'
   const isRescanning = rescan.status === 'pending';
@@ -135,6 +138,7 @@ export default function HomePage() {
                   />
                 </div>
                 <div className="text-xs text-gray-400 mt-2">Meal swipes reset every Thursday</div>
+                <div className="text-xs text-gray-400 mt-1">Last synced: {lastSyncedLabel}</div>
               </div>
             </div>
 

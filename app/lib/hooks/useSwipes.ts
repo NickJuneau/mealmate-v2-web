@@ -8,14 +8,25 @@ type SwipesResponse = {
   used: number;
   remaining: number;
   preview: any[];
-  meta?: { usedRecent?: number; totalFoundRecent?: number };
+  meta?: { usedRecent?: number; totalFoundRecent?: number; lastSyncedAt?: string | null };
 };
 
 type HistoryResponse = {
   weekStart: string;
   usedRecent: number;
+  lastSyncedAt?: string | null;
   events: any[];
 };
+
+function parseApiError(text: string, fallback: string) {
+  if (!text) return fallback;
+  try {
+    const parsed = JSON.parse(text) as { error?: string };
+    return parsed.error || fallback;
+  } catch {
+    return text;
+  }
+}
 
 export function useSwipes(days = 7, enabled = true) {
   return useQuery<SwipesResponse, Error>({
@@ -24,7 +35,7 @@ export function useSwipes(days = 7, enabled = true) {
       const res = await fetch(`/api/swipes?days=${days}`);
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || 'Failed to fetch swipes');
+        throw new Error(parseApiError(text, 'Failed to fetch swipes'));
       }
       return res.json();
     },
@@ -43,7 +54,7 @@ export function useHistory(days = 30, enabled = true) {
       const res = await fetch(`/api/history?days=${days}`);
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(text || 'Failed to fetch history');
+        throw new Error(parseApiError(text, 'Failed to fetch history'));
       }
       return res.json();
     },
@@ -57,11 +68,11 @@ export function useRescan() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (days: number = 7) => {
-      // We call GET /api/swipes to trigger a fresh scan (server-side scan)
-      const res = await fetch(`/api/swipes?days=${days}`);
+      // force=1 triggers a fresh Gmail sync + DB upsert, then returns summary
+      const res = await fetch(`/api/swipes?days=${days}&force=1`);
       if (!res.ok) {
         const txt = await res.text();
-        throw new Error(txt || 'Rescan failed');
+        throw new Error(parseApiError(txt, 'Rescan failed'));
       }
       return res.json();
     },
