@@ -2,12 +2,15 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useSwipes, useRescan } from '@/app/lib/hooks/useSwipes';
+import { signIn, useSession } from 'next-auth/react';
 
 type ScanMessage = { type: 'info' | 'success' | 'error'; text: string } | null;
 
 export default function HomePage() {
   const [days] = useState<number>(7); // fixed to 7 days per your design
-  const { data, isLoading, error } = useSwipes(days);
+  const { status } = useSession();
+  const isAuthed = status === 'authenticated';
+  const { data, isLoading, error } = useSwipes(days, isAuthed);
   const rescan = useRescan();
 
   // React Query v5 mutation status is 'pending' | 'success' | 'error' | 'idle'
@@ -44,6 +47,39 @@ export default function HomePage() {
     return;
   }, [rescan.status, rescan.error]);
 
+  if (status === 'loading') {
+    return (
+      <main className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-gray-500">
+            Checking session...
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!isAuthed) {
+    return (
+      <main className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <h1 className="text-xl font-semibold text-gray-900">Connect Gmail to Start</h1>
+            <p className="mt-2 text-sm text-gray-600">
+              Sign in with Google to read your meal swipe emails and populate this dashboard.
+            </p>
+            <button
+              onClick={() => signIn('google', { callbackUrl: '/' })}
+              className="mt-5 inline-flex items-center rounded-md bg-[#9C000D] px-4 py-2 text-sm font-medium text-white hover:bg-[#B30012]"
+            >
+              Sign In with Google
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-6 py-10">
@@ -76,7 +112,7 @@ export default function HomePage() {
                 </div>
 
                 {/* remaining pill */}
-                <div className="ml-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium">
+                <div className="ml-2 px-3 py-1 rounded-full bg-[#FDECEE] text-[#9C000D] text-sm font-medium">
                   Remaining: {data ? data.remaining : '—'}
                 </div>
               </div>
@@ -89,7 +125,7 @@ export default function HomePage() {
                     style={{
                       width: `${data ? Math.min(100, (data.used / 7) * 100) : 0}%`,
                       background:
-                        'linear-gradient(90deg, rgba(59,130,246,1) 0%, rgba(99,102,241,1) 100%)'
+                        'linear-gradient(90deg, #9C000D 0%, #C1121F 100%)'
                     }}
                   />
                 </div>
@@ -124,7 +160,7 @@ export default function HomePage() {
               <button
                 onClick={() => rescan.mutate(days)}
                 disabled={isRescanning}
-                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm shadow-sm"
+                className="inline-flex items-center gap-2 bg-[#9C000D] hover:bg-[#B30012] disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm shadow-sm"
               >
               Rescan
               </button>

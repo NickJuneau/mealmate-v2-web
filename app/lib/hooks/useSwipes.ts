@@ -17,7 +17,7 @@ type HistoryResponse = {
   events: any[];
 };
 
-export function useSwipes(days = 7) {
+export function useSwipes(days = 7, enabled = true) {
   return useQuery<SwipesResponse, Error>({
     queryKey: ['swipes', days],
     queryFn: async () => {
@@ -29,12 +29,14 @@ export function useSwipes(days = 7) {
       return res.json();
     },
     // options
+    enabled,
+    retry: false,
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 // 1 minute
   });
 }
 
-export function useHistory(days = 30) {
+export function useHistory(days = 30, enabled = true) {
   return useQuery<HistoryResponse, Error>({
     queryKey: ['history', days],
     queryFn: async () => {
@@ -45,6 +47,8 @@ export function useHistory(days = 30) {
       }
       return res.json();
     },
+    enabled,
+    retry: false,
     refetchOnWindowFocus: false
   });
 }

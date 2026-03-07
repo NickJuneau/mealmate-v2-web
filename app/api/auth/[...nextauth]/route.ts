@@ -46,10 +46,8 @@ const options: NextAuthOptions = {
      * session is returned to the client. We keep it minimal here,
      * but you can attach flags to session.user if desired.
      */
-    async session({ session, token }) {
-      // Attach a small flag if user has a refresh token (not strictly necessary)
+    async session({ session }) {
       session.user = session.user || {};
-      (session as any).accessToken = (token as any).accessToken ?? null;
       return session;
     }
   },
@@ -118,4 +116,6 @@ const options: NextAuthOptions = {
 };
 
 const handler = NextAuth(options);
-export { handler as GET, handler as POST };
+// export the options object so other modules (e.g. our API routes) can call
+// getServerSession with the same configuration.
+export { handler as GET, handler as POST, options as authOptions };

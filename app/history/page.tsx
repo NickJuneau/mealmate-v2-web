@@ -2,6 +2,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 import { useHistory } from '@/app/lib/hooks/useSwipes';
+import { signIn, useSession } from 'next-auth/react';
 
 function downloadCsv(filename: string, rows: string[][]) {
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -16,7 +17,9 @@ function downloadCsv(filename: string, rows: string[][]) {
 
 export default function HistoryPage() {
   const [days] = useState(30);
-  const { data, isLoading, error } = useHistory(days);
+  const { status } = useSession();
+  const isAuthed = status === 'authenticated';
+  const { data, isLoading, error } = useHistory(days, isAuthed);
 
   const csvRows = useMemo(() => {
     if (!data?.events) return [];
@@ -30,6 +33,39 @@ export default function HistoryPage() {
     ]);
     return [header, ...body];
   }, [data]);
+
+  if (status === 'loading') {
+    return (
+      <main className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-gray-500">
+            Checking session...
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!isAuthed) {
+    return (
+      <main className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-6 py-10">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <h1 className="text-xl font-semibold text-gray-900">Sign In Required</h1>
+            <p className="mt-2 text-sm text-gray-600">
+              Sign in with Google to view your swipe history.
+            </p>
+            <button
+              onClick={() => signIn('google', { callbackUrl: '/history' })}
+              className="mt-5 inline-flex items-center rounded-md bg-[#9C000D] px-4 py-2 text-sm font-medium text-white hover:bg-[#B30012]"
+            >
+              Sign In with Google
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -45,7 +81,7 @@ export default function HistoryPage() {
             <button
               onClick={() => csvRows.length > 1 && downloadCsv('mealmate-history.csv', csvRows)}
               disabled={!csvRows || csvRows.length <= 1}
-              className="text-sm inline-flex items-center gap-2 px-3 py-1 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
+              className="text-sm inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#FDECEE] text-[#9C000D] hover:bg-[#FAD7DB] disabled:opacity-50"
             >
               Export CSV
             </button>

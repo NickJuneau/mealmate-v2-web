@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "./components/header";
 import QueryProvider from "./providers/QueryProvider";
+import AuthProvider from "./providers/AuthProvider";
 
 export const metadata: Metadata = {
   title: "Meal Mate v2",
@@ -16,12 +17,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <QueryProvider>
-          <Header />
-          <div>
-            {children}
-          </div>
-        </QueryProvider>
+        <AuthProvider>
+          <QueryProvider>
+            <Header />
+            <div>{children}</div>
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );
