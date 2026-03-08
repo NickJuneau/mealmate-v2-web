@@ -5,8 +5,13 @@ import QueryProvider from "./providers/QueryProvider";
 import AuthProvider from "./providers/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "Meal Mate v2",
+  title: "MealMate",
   description: "Created by Nick Juneau",
+  icons: {
+    icon: "/favicon-16.svg",
+    shortcut: "/favicon-16.svg",
+    apple: "/favicon-16.svg",
+  },
 };
 
 export default function RootLayout({

@@ -1,8 +1,13 @@
 // app/page.tsx (client)
 'use client';
 import { useState } from 'react';
-import { useSwipes, useRescan } from '@/app/lib/hooks/useSwipes';
-import { signIn, useSession } from 'next-auth/react';
+import {
+  useSwipes,
+  useRescan,
+  useDisconnectAccount,
+  useDeleteAccount
+} from '@/app/lib/hooks/useSwipes';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
 
 type ScanMessage = { type: 'info' | 'success' | 'error'; text: string } | null;
@@ -18,6 +23,8 @@ export default function HomePage() {
   const isAuthed = status === 'authenticated';
   const { data, isLoading, error } = useSwipes(days, isAuthed);
   const rescan = useRescan();
+  const disconnectAccount = useDisconnectAccount();
+  const deleteAccount = useDeleteAccount();
   const lastSyncedLabel = data?.meta?.lastSyncedAt
     ? new Date(data.meta.lastSyncedAt).toLocaleString()
     : 'Not synced yet';
@@ -31,6 +38,37 @@ export default function HomePage() {
       : rescan.status === 'error'
       ? { type: 'error', text: getErrorMessage(rescan.error, 'Rescan failed') }
       : null;
+
+  const isDisconnecting = disconnectAccount.status === 'pending';
+  const isDeletingAccount = deleteAccount.status === 'pending';
+
+  async function handleDisconnect() {
+    const confirmed = window.confirm(
+      'Disconnect Gmail and remove stored swipe data? You can reconnect later by signing in again.'
+    );
+    if (!confirmed) return;
+
+    try {
+      await disconnectAccount.mutateAsync();
+      await signOut({ callbackUrl: '/' });
+    } catch {
+      // Error is surfaced via mutation state below.
+    }
+  }
+
+  async function handleDeleteAccount() {
+    const confirmed = window.confirm(
+      'Delete your MealMate account and all stored data? This action cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteAccount.mutateAsync();
+      await signOut({ callbackUrl: '/' });
+    } catch {
+      // Error is surfaced via mutation state below.
+    }
+  }
 
   if (status === 'loading') {
     return (
@@ -177,8 +215,42 @@ export default function HomePage() {
             )}
           </div>
         </div>
+
+        <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-6">
+          <h3 className="text-base font-semibold text-gray-900">Account and Data</h3>
+          <p className="mt-2 text-sm text-gray-600">
+            Disconnect Gmail access or permanently delete your MealMate account and stored data.
+          </p>
+
+          <div className="mt-4 flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleDisconnect}
+              disabled={isDisconnecting || isDeletingAccount}
+              className="inline-flex items-center justify-center rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-60"
+            >
+              {isDisconnecting ? 'Disconnecting...' : 'Disconnect Gmail'}
+            </button>
+            <button
+              onClick={handleDeleteAccount}
+              disabled={isDeletingAccount || isDisconnecting}
+              className="inline-flex items-center justify-center rounded-md border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-60"
+            >
+              {isDeletingAccount ? 'Deleting...' : 'Delete My Account'}
+            </button>
+          </div>
+
+          {disconnectAccount.status === 'error' && (
+            <p className="mt-3 text-sm text-red-600">
+              {getErrorMessage(disconnectAccount.error, 'Disconnect failed')}
+            </p>
+          )}
+          {deleteAccount.status === 'error' && (
+            <p className="mt-2 text-sm text-red-600">
+              {getErrorMessage(deleteAccount.error, 'Delete account failed')}
+            </p>
+          )}
+        </div>
       </div>
     </main>
   );
 }
-

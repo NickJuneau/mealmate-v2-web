@@ -96,3 +96,39 @@ export function useRescan() {
     }
   });
 }
+
+export function useDisconnectAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/account', { method: 'POST' });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(parseApiError(txt, 'Failed to disconnect account'));
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['swipes'] });
+      qc.invalidateQueries({ queryKey: ['history'] });
+    }
+  });
+}
+
+export function useDeleteAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/account', { method: 'DELETE' });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(parseApiError(txt, 'Failed to delete account'));
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['swipes'] });
+      qc.invalidateQueries({ queryKey: ['history'] });
+    }
+  });
+}
