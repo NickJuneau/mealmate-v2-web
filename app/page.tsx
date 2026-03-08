@@ -9,6 +9,7 @@ import {
 } from '@/app/lib/hooks/useSwipes';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 type ScanMessage = { type: 'info' | 'success' | 'error'; text: string } | null;
 
@@ -77,6 +78,11 @@ export default function HomePage() {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-gray-500">
             Checking session...
           </div>
+          <div className="mt-4 text-center text-xs text-gray-500">
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-gray-700">
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </main>
     );
@@ -97,6 +103,11 @@ export default function HomePage() {
             >
               Sign In with Google
             </button>
+          </div>
+          <div className="mt-4 text-center text-xs text-gray-500">
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-gray-700">
+              Privacy Policy
+            </Link>
           </div>
         </div>
       </main>
@@ -249,6 +260,12 @@ export default function HomePage() {
               {getErrorMessage(deleteAccount.error, 'Delete account failed')}
             </p>
           )}
+        </div>
+
+        <div className="mt-4 text-center text-xs text-gray-500">
+          <Link href="/privacy" className="underline underline-offset-2 hover:text-gray-700">
+            Privacy Policy
+          </Link>
         </div>
       </div>
     </main>
