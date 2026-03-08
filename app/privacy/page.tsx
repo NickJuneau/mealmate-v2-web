@@ -69,7 +69,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-base font-semibold text-gray-900">Contact</h2>
               <p className="mt-2">
-                For privacy questions, contact: <span className="font-medium">privacy@mealmate-usc.com</span>
+                For privacy questions, contact: <span className="font-medium">support@mealmate-usc.com</span>
               </p>
             </section>
           </div>
