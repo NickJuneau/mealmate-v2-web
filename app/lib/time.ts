@@ -19,9 +19,9 @@ type TzParts = {
   second: number;
 };
 
-function getTzParts(date: Date, timeZone: string): TzParts {
+function getTzParts(date: Date, zoneId: string): TzParts {
   const dtf = new Intl.DateTimeFormat('en-US', {
-    timeZone,
+    timeZone: zoneId,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -43,8 +43,8 @@ function getTzParts(date: Date, timeZone: string): TzParts {
   };
 }
 
-function getTzOffsetMs(instant: Date, timeZone: string) {
-  const parts = getTzParts(instant, timeZone);
+function getTzOffsetMs(instant: Date, zoneId: string) {
+  const parts = getTzParts(instant, zoneId);
   const asUtcMs = Date.UTC(
     parts.year,
     parts.month - 1,
@@ -57,7 +57,7 @@ function getTzOffsetMs(instant: Date, timeZone: string) {
 }
 
 function zonedDateTimeToUtc(
-  timeZone: string,
+  zoneId: string,
   year: number,
   month: number,
   day: number,
@@ -66,13 +66,13 @@ function zonedDateTimeToUtc(
   second = 0
 ) {
   const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
-  const offsetMs = getTzOffsetMs(utcGuess, timeZone);
+  const offsetMs = getTzOffsetMs(utcGuess, zoneId);
   return new Date(utcGuess.getTime() - offsetMs);
 }
 
-function getWeekdayIndex(date: Date, timeZone: string) {
+function getWeekdayIndex(date: Date, zoneId: string) {
   const weekday = new Intl.DateTimeFormat('en-US', {
-    timeZone,
+    timeZone: zoneId,
     weekday: 'short'
   })
     .format(date)
@@ -80,9 +80,9 @@ function getWeekdayIndex(date: Date, timeZone: string) {
   return WEEKDAY_INDEX[weekday] ?? 0;
 }
 
-export function getSwipeWeekWindow(now = new Date(), timeZone = SWIPE_TIME_ZONE) {
-  const partsNow = getTzParts(now, timeZone);
-  const weekday = getWeekdayIndex(now, timeZone);
+export function getSwipeWeekWindow(now = new Date(), zoneId = SWIPE_TIME_ZONE) {
+  const partsNow = getTzParts(now, zoneId);
+  const weekday = getWeekdayIndex(now, zoneId);
   const daysBack = (weekday - 4 + 7) % 7; // Thu anchor
 
   const localDateCursor = new Date(Date.UTC(partsNow.year, partsNow.month - 1, partsNow.day));
@@ -91,14 +91,13 @@ export function getSwipeWeekWindow(now = new Date(), timeZone = SWIPE_TIME_ZONE)
   const startYear = localDateCursor.getUTCFullYear();
   const startMonth = localDateCursor.getUTCMonth() + 1;
   const startDay = localDateCursor.getUTCDate();
-  const weekStart = zonedDateTimeToUtc(timeZone, startYear, startMonth, startDay, 0, 0, 0);
+  const weekStart = zonedDateTimeToUtc(zoneId, startYear, startMonth, startDay, 0, 0, 0);
 
   localDateCursor.setUTCDate(localDateCursor.getUTCDate() + 7);
   const endYear = localDateCursor.getUTCFullYear();
   const endMonth = localDateCursor.getUTCMonth() + 1;
   const endDay = localDateCursor.getUTCDate();
-  const weekEnd = zonedDateTimeToUtc(timeZone, endYear, endMonth, endDay, 0, 0, 0);
+  const weekEnd = zonedDateTimeToUtc(zoneId, endYear, endMonth, endDay, 0, 0, 0);
 
   return { weekStart, weekEnd };
 }
-
