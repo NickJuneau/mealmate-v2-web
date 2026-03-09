@@ -82,6 +82,10 @@ export default function HomePage() {
             <Link href="/privacy" className="underline underline-offset-2 hover:text-gray-700">
               Privacy Policy
             </Link>
+            <span className="mx-2 text-gray-400">|</span>
+            <Link href="/terms" className="underline underline-offset-2 hover:text-gray-700">
+              Terms
+            </Link>
           </div>
         </div>
       </main>
@@ -107,6 +111,10 @@ export default function HomePage() {
           <div className="mt-4 text-center text-xs text-gray-500">
             <Link href="/privacy" className="underline underline-offset-2 hover:text-gray-700">
               Privacy Policy
+            </Link>
+            <span className="mx-2 text-gray-400">|</span>
+            <Link href="/terms" className="underline underline-offset-2 hover:text-gray-700">
+              Terms
             </Link>
           </div>
         </div>
@@ -265,6 +273,10 @@ export default function HomePage() {
         <div className="mt-4 text-center text-xs text-gray-500">
           <Link href="/privacy" className="underline underline-offset-2 hover:text-gray-700">
             Privacy Policy
+          </Link>
+          <span className="mx-2 text-gray-400">|</span>
+          <Link href="/terms" className="underline underline-offset-2 hover:text-gray-700">
+            Terms
           </Link>
         </div>
       </div>
