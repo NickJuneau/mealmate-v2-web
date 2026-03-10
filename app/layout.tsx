@@ -7,7 +7,7 @@ import AuthProvider from "./providers/AuthProvider";
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.mealmate-usc.com"),
   title: {
-    default: "MealMate | Meal Swipe Tracker",
+    default: "MealMate",
     template: "%s | MealMate",
   },
   description:
