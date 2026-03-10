@@ -35,10 +35,18 @@ export const metadata: Metadata = {
       "max-video-preview": -1,
     },
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    title: "MealMate",
+  },
   icons: {
-    icon: "/favicon-16.svg",
-    shortcut: "/favicon-16.svg",
-    apple: "/favicon-16.svg",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon0.svg", type: "image/svg+xml" },
+      { url: "/icon1.png", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
   },
 };
 
